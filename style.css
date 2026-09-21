@@ -1,0 +1,367 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0 16px;
+}
+
+header {
+    height: 55px;
+    border: 2px solid #4db6ac;
+    background-color: #fb801cb3;
+    color: white;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin: 10px auto;
+}
+
+
+/* =========================
+   MAIN AREA
+   ========================= */
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 90%;
+    max-width: 1000px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================
+   CONTROLS
+   ========================= */
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+    max-width: 850px;
+
+    justify-content: flex-end;
+
+    margin-bottom: 10px;
+}
+
+.timer {
+    padding: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+    font-family: Arial, sans-serif;
+
+    min-width: 80px;
+}
+
+.start {
+    min-width: 100px;
+    max-height: 50px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* =========================
+   AVATAR
+   ========================= */
+   .avatar-container {
+    width: 500px;
+    height: 400px;
+    background-color: #e0f2f1;
+    border: 2px solid #4db6ac;
+    border-radius: 16px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    margin: 5px auto;
+}
+
+/* Face */
+.face {
+    width: 250px;
+    height: 250px;
+    background-color: #f6c7a5;
+    border: 3px solid #333;
+    border-radius: 50%;
+
+    position: relative;
+}
+
+/* Eyes */
+.eyes {
+    display: flex;
+    justify-content: space-around;
+
+    width: 150px;
+    margin: 60px auto 0;
+}
+
+.eye {
+    width: 25px;
+    height: 35px;
+    background-color: #333;
+    border-radius: 50%;
+}
+
+/* Mouth */
+.mouth {
+    width: 80px;
+    height: 30px;
+
+    background-color: #333;
+    border-radius: 0 0 50px 50px;
+    transition: all 0.1s;
+    position: absolute;
+    bottom: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.mouth.vowel {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+}
+/* .avatar-container {
+    width: 100%;
+    max-width: 850px;
+
+    height: 350px;
+
+    background-color: #e0f2f1;
+
+    border: 2px solid #4db6ac;
+    border-radius: 16px;
+
+    margin: 10px auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+.avatar-container p {
+    font-family: Arial, sans-serif;
+    color: #2f2f2f;
+    font-size: 20px;
+} */
+
+
+/* =========================
+   QUESTION
+   ========================= */
+
+.question-output {
+    width: 100%;
+    max-width: 850px;
+
+    max-height: 60px;
+
+    background-color: #e0f2f1;
+
+    border: 2px solid #4db6ac;
+    border-radius: 16px;
+
+    padding: 10px;
+
+    margin: 0 auto 10px;
+
+    font-size: 18px;
+    font-family: Arial, sans-serif;
+
+    color: #2f2f2f;
+}
+
+
+/* =========================
+   QUESTION TYPE BUTTONS
+   ========================= */
+
+.button-group {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 10px;
+
+    width: 90%;
+    max-width: 850px;
+    
+
+    margin: 5px auto;
+}
+
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+button {
+    border: 2px solid #2f9e94;
+
+    border-radius: 10px;
+
+    background-color: #4db6ac;
+
+    color: #ffffff;
+
+    padding: 10px 20px;
+
+    font-size: 16px;
+
+    font-family: Arial, sans-serif;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+    margin: 15px;
+}
+.page-button{
+    border: 2px solid #2f9e94;
+
+    border-radius: 10px;
+
+    background-color: #4db6ac;
+
+    color: #ffffff;
+
+    padding: 10px 20px;
+
+    font-size: 16px;
+
+    font-family: Arial, sans-serif;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+    margin: 15px;
+}
+
+button:hover {
+    background-color: #3f9a90;
+}
+
+button:active {
+    background-color: #fb801cb3;
+}
+
+.response-container{
+    display:flex;
+}
+
+/* ADMIN SPECIFIC */
+
+.add_question_container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    max-width: 1000px;
+    margin: 30px auto;
+}
+
+.question-card {
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 25px;
+    min-height: 200px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    background-color: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-type {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.question-card p {
+    color: #555;
+    flex-grow: 1;
+}
+
+.add_question {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #4db6ac;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.add_question:hover {
+    background-color: #3f9a90;
+}
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+
+    header {
+        padding: 5px;
+        font-size: 10px;
+        height: 45px;
+    }
+
+    .main-container {
+        width: 100%;
+    }
+
+    .controls {
+        justify-content: center;
+    }
+
+    .avatar-container {
+        width: 100%;
+        height: 250px;
+    }
+
+    .question-output {
+        width: 100%;
+    }
+
+    .button-group {
+        grid-template-columns: 1fr;
+
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .timer {
+        font-size: 22px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 14px;
+    }
+}

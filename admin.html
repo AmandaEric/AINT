@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AINT - Admin</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="aintIcon.png">
+</head>
+
+<body>
+
+    <header>
+
+        <a href="main.html" class="page-button">
+            Student
+        </a>
+
+        <h1>
+            Artificial Intelligent Testing Center
+        </h1>
+
+        <a href="admin.html" class="page-button">
+            Admin
+        </a>
+
+    </header>
+
+
+    <h1>Add Questions</h1>
+
+
+    <div class="add_question_container">
+
+
+        <!-- OBJECTIVE -->
+        <div class="question-card">
+
+            <div class="question-type">
+                Objective
+            </div>
+
+            <p>
+                Questions with one correct answer.
+            </p>
+
+            <textarea
+                id="objectiveInput"
+                placeholder="Type your objective question here..."
+                rows="4">
+            </textarea>
+
+            <button
+                class="add_question"
+                id="objectiveAdd">
+                + Add Question
+            </button>
+
+            <div id="objectiveList">
+                <!-- Questions will appear here -->
+            </div>
+
+        </div>
+
+
+        <!-- SEMI-OBJECTIVE -->
+        <div class="question-card">
+
+            <div class="question-type">
+                Semi-Objective
+            </div>
+
+            <p>
+                Questions that have some flexibility in the answer.
+            </p>
+
+            <textarea
+                id="semiInput"
+                placeholder="Type your semi-objective question here..."
+                rows="4">
+            </textarea>
+
+            <button
+                class="add_question"
+                id="semiAdd">
+                + Add Question
+            </button>
+
+            <div id="semiList">
+                <!-- Questions will appear here -->
+            </div>
+
+        </div>
+
+
+        <!-- QUALITATIVE -->
+        <div class="question-card">
+
+            <div class="question-type">
+                Qualitative
+            </div>
+
+            <p>
+                Questions that require a detailed or personal response.
+            </p>
+
+            <textarea
+                id="qualitativeInput"
+                placeholder="Type your qualitative question here..."
+                rows="4">
+            </textarea>
+
+            <button
+                class="add_question"
+                id="qualitativeAdd">
+                + Add Question
+            </button>
+
+            <div id="qualitativeList">
+                <!-- Questions will appear here -->
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Clear All Questions -->
+    <div class="admin-controls">
+
+        <button id="clearQuestions">
+            Clear All Questions
+        </button>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
