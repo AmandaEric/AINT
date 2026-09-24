@@ -83,64 +83,48 @@ header {
 /* =========================
    AVATAR
    ========================= */
-   .avatar-container {
-    width: 500px;
-    height: 400px;
-    background-color: #e0f2f1;
-    border: 2px solid #4db6ac;
-    border-radius: 16px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-    margin: 5px auto;
-}
-
-/* Face */
-.face {
-    width: 250px;
-    height: 250px;
-    background-color: #f6c7a5;
-    border: 3px solid #333;
-    border-radius: 50%;
-
+.avatar-container {
     position: relative;
+    width: 450px;
+    margin: 30px auto;
 }
 
-/* Eyes */
-.eyes {
-    display: flex;
-    justify-content: space-around;
-
-    width: 150px;
-    margin: 60px auto 0;
+#ai-avatar {
+    width: 100%;
+    display: block;
 }
 
-.eye {
-    width: 25px;
-    height: 35px;
-    background-color: #333;
-    border-radius: 50%;
-}
-
-/* Mouth */
-.mouth {
-    width: 80px;
-    height: 30px;
-
-    background-color: #333;
-    border-radius: 0 0 50px 50px;
-    transition: all 0.1s;
+#animated-mouth {
     position: absolute;
-    bottom: 55px;
+
+    /* We'll adjust this after seeing it */
     left: 50%;
-    transform: translateX(-50%);
-}
-.mouth.vowel {
+    top: 65%;
+
     width: 45px;
-    height: 45px;
+    height: 10px;
+
+    transform: translate(-50%, -50%);
+
+    background: #8f3f43;
     border-radius: 50%;
+
+    z-index: 10;
+}
+
+#animated-mouth.talking {
+    width: 42px;
+    height: 25px;
+}
+
+#animated-mouth.vowel {
+    width: 25px;
+    height: 32px;
+}
+
+#animated-mouth.closed {
+    width: 45px;
+    height: 8px;
 }
 
 
