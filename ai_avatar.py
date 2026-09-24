@@ -44,4 +44,3 @@ wearing a white shirt and a dotted blazer.
 """
 
 print(create_custom_avatar(character_description))
-# api_key=os.environ.get(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)
