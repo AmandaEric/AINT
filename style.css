@@ -19,7 +19,7 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-
+    padding: 10px auto;
     margin: 10px auto;
 }
 
@@ -236,15 +236,16 @@ button:active {
 .add_question_container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+    gap: 20px;
     max-width: 1000px;
     margin: 30px auto;
+    align-items: start;
 }
 
 .question-card {
     border: 2px solid #ddd;
     border-radius: 12px;
-    padding: 25px;
+    padding: 5px;
     min-height: 200px;
 
     display: flex;
@@ -268,7 +269,7 @@ button:active {
 }
 
 .add_question {
-    padding: 10px 20px;
+    padding: 1px 20px;
     border: none;
     border-radius: 8px;
     background-color: #4db6ac;

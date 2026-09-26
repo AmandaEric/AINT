@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 // Called once when the student page loads, to get the AI's avatar image.
 // ------------------------------------------
 app.post("/api/generate-avatar", async (req, res) => {
-    try {
+    try { 
         const characterDescription = req.body.characterDescription;
 
         const prompt = `
