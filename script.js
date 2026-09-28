@@ -620,19 +620,15 @@ on(
 
 function speakQuestion(text) {
 
-    if (
-        !("speechSynthesis" in window)
-    ) {
-
+    if (!("speechSynthesis" in window)) {
         return;
     }
 
-
     speechSynthesis.cancel();
 
+    const cleanedText = normalizeMathForSpeech(text);
 
-    const speech =
-        new SpeechSynthesisUtterance(text);
+    const speech = new SpeechSynthesisUtterance(cleanedText);
 
 
     speech.rate = 1;
@@ -646,7 +642,20 @@ function speakQuestion(text) {
         speech
     );
 }
-
+function normalizeMathForSpeech(text) {
+    return text
+        .replace(/\+/g, " plus ")
+        .replace(/-/g, " minus ")
+        .replace(/\*/g, " times ")
+        .replace(/÷/g, " divided by ")
+        .replace(/\//g, " divided by ")
+        .replace(/=/g, " equals ")
+        .replace(/%/g, " percent ")
+        .replace(/\^/g, " to the power of ")
+        .replace(/√/g, " square root of ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
 // ==========================================
 // MOUTH ANIMATION

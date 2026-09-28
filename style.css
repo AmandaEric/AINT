@@ -3,9 +3,16 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     margin: 0;
     padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* body must be at least as tall as the screen */
 }
 
 header {
@@ -15,12 +22,11 @@ header {
     color: white;
     font-size: 15px;
     font-family: Arial, sans-serif;
-
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 10px auto;
-    margin: 10px auto;
+    margin: 10px;
 }
 
 
@@ -38,8 +44,20 @@ header {
 
     margin: 0 auto;
 }
+.main-container,
+.button-group {
+    flex-shrink: 0;
+}
+footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #4db6ac;
+    color: white;
+    font-size: 14px;
+    margin-top: auto;
+    height: 10%;
 
-
+}
 /* =========================
    CONTROLS
    ========================= */
@@ -281,6 +299,7 @@ button:active {
 .add_question:hover {
     background-color: #3f9a90;
 }
+
 /* =========================
    MOBILE
    ========================= */
