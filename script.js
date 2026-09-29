@@ -25,7 +25,7 @@ const el = {
     evaluationBox: document.querySelector(".evaluation"),
 
     // Avatar
-    mouth: document.querySelector(".mouth"),
+    mouth: document.getElementById("ai-avatar"),
 
     // Admin question lists
     objectiveList: document.getElementById("objectiveList"),
@@ -682,18 +682,18 @@ function normalizeMathForSpeech(text) {
 const FRAME_PATH = "ai_speech_frames/";
 
 const FRAMES = {
-    a: FRAME_PATH + "ai_speech_frames/A(ah).png",
-    e: FRAME_PATH + "ai_speech_frames/E(ee).png",
-    i: FRAME_PATH + "ai_speech_frames/I(ee).png",
-    l: FRAME_PATH + "ai_speech_frames/L(el).png",
-    m: FRAME_PATH + "ai_speech_frames/M(mmm).png",
-    o: FRAME_PATH + "ai_speech_frames/O(oh).png",
-    u: FRAME_PATH + "ai_speech_frames/U(oo).png",
-    smile: FRAME_PATH + "ai_speech_frames/smile.png",
-    eyesClosed: FRAME_PATH + "ai_speech_frames/eyes_closed.png",
-    idle: FRAME_PATH + "ai_speech_frames/eyes_open_neutral.png",
+    a: FRAME_PATH + "A(ah).png",
+    e: FRAME_PATH + "E(ee).png",
+    i: FRAME_PATH + "I(ee).png",
+    l: FRAME_PATH + "L(el).png",
+    m: FRAME_PATH + "M(mmm).png",
+    o: FRAME_PATH + "O(oh).png",
+    u: FRAME_PATH + "U(oo).png",
+    smile: FRAME_PATH + "smile.png",
+    eyesClosed: FRAME_PATH + "eyes_closed.png",
+    idle: FRAME_PATH + "eyes_open_neutral.png",
 };
-
+const mouthImg = el.mouth;
 // Preload every frame so there is no flicker the first time one shows
 Object.values(FRAMES).forEach(function (src) {
     const img = new Image();
