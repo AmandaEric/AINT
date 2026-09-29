@@ -104,46 +104,27 @@ footer {
 .avatar-container {
     position: relative;
     width: 450px;
+    height: 400px;              /* gives the image something to fill */
     margin: 30px auto;
+    background-color: #c5c1ba;
+    border: 2px solid #4db6ac;
+    border-radius: 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;           /* keeps the picture inside the rounded corners */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #ai-avatar {
     width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
     display: block;
 }
 
-#animated-mouth {
-    position: absolute;
-
-    /* We'll adjust this after seeing it */
-    left: 50%;
-    top: 65%;
-
-    width: 45px;
-    height: 10px;
-
-    transform: translate(-50%, -50%);
-
-    background: #8f3f43;
-    border-radius: 50%;
-
-    z-index: 10;
-}
-
-#animated-mouth.talking {
-    width: 42px;
-    height: 25px;
-}
-
-#animated-mouth.vowel {
-    width: 25px;
-    height: 32px;
-}
-
-#animated-mouth.closed {
-    width: 45px;
-    height: 8px;
-}
 
 
 
