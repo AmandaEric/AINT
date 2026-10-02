@@ -4,29 +4,34 @@
 }
 
 html, body {
-    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
 body {
-    margin: 0;
-    padding: 0 16px;
+
     display: flex;
     flex-direction: column;
     min-height: 100vh; /* body must be at least as tall as the screen */
+    background-color: #f5f3ed;
 }
 
 header {
+    width: 100%;
     height: 55px;
     border: 2px solid #4db6ac;
     background-color: #fb801cb3;
     color: white;
-    font-size: 15px;
-    font-family: Arial, sans-serif;
+    font-size: 20px;
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    word-spacing: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px auto;
-    margin: 10px;
+
 }
 
 
@@ -36,7 +41,7 @@ header {
 
 .main-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
 
     width: 90%;
@@ -56,43 +61,67 @@ footer {
     font-size: 14px;
     margin-top: auto;
     height: 10%;
+    width: 100%;
 
 }
 /* =========================
    CONTROLS
    ========================= */
 
-.controls {
+   .exam-info {
     display: flex;
-    align-items: center;
-    gap: 10px;
-
+    flex-direction: column;  
+    align-items: center;      
+    gap: 10px;                
     width: 100%;
-    max-width: 850px;
+    max-width: 300px;
+    margin: 20px auto;
+}
 
-    justify-content: flex-end;
+.exam-info input {
+    width: 100%;              
+    padding: 10px;
+    box-sizing: border-box;   
+    font-size: 1rem;
+}
 
-    margin-bottom: 10px;
+.test-code {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.student-name {
+    font-size: 18px;
+    font-family: Arial, sans-serif;
+    padding: 8px 10px;
+    width: 150px;
+    box-sizing: border-box;
 }
 
 .timer {
     padding: 10px;
-
+    
     display: flex;
     align-items: center;
     justify-content: center;
-
-    font-size: 24px;
+    border-radius: 50%;
+    font-size: 30px;
     font-family: Arial, sans-serif;
-
+    border: 2px solid #4db6ac;
+    background-color: #fb801c76;
     min-width: 80px;
+    height: 80px;
 }
 
 .start {
     min-width: 100px;
     max-height: 50px;
-
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 400;
+    font-style: normal;
     display: flex;
+    font-size: 30px;
     justify-content: center;
     align-items: center;
 }
@@ -118,8 +147,8 @@ footer {
 }
 
 #ai-avatar {
-    width: 100%;
-    height: 100%;
+    width: 80%;
+    height: 80%;
     object-fit: contain;
     object-position: center;
     display: block;
@@ -160,16 +189,35 @@ footer {
 
 .button-group {
     display: grid;
-
     grid-template-columns: repeat(3, 1fr);
-
     gap: 10px;
-
     width: 90%;
     max-width: 850px;
-    
-
     margin: 5px auto;
+
+}
+
+button.objective {
+    /* your styles */
+    background-color: #f5f3ed;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    color: black;
+}
+button.semi {
+    /* your styles */
+    background-color: #f5f3ed;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    color: black;
+}
+
+button.qualitative {
+    /* your styles */
+    background-color: #f5f3ed;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    color: black;
 }
 
 
@@ -179,43 +227,29 @@ footer {
 
 button {
     border: 2px solid #2f9e94;
-
     border-radius: 10px;
-
     background-color: #4db6ac;
-
     color: #ffffff;
-
     padding: 10px 20px;
-
     font-size: 16px;
-
-    font-family: Arial, sans-serif;
-
+    font-family: Arial, sans-serif bold;
     cursor: pointer;
-
     transition: background-color 0.2s ease;
     margin: 15px;
 }
 .page-button{
     border: 2px solid #2f9e94;
-
     border-radius: 10px;
-
     background-color: #4db6ac;
-
     color: #ffffff;
-
     padding: 10px 20px;
-
     font-size: 16px;
-
     font-family: Arial, sans-serif;
-
     cursor: pointer;
-
     transition: background-color 0.2s ease;
-    margin: 15px;
+    margin: 40px;
+    text-decoration: none;
+    letter-spacing: 2px;
 }
 
 button:hover {
@@ -280,10 +314,82 @@ button:active {
 .add_question:hover {
     background-color: #3f9a90;
 }
+#ai-avatar {
+    transition: opacity 0.05s ease-in-out;
+}
 
 /* =========================
    MOBILE
    ========================= */
+   @media (min-width: 601px) and (max-width: 900px) {
+
+    header {
+        height: 50px;
+        font-size: 13px;
+        
+    }
+    .page-button{
+        height:35px;
+        max-width: 30%;
+        margin:5px;
+        padding:5px
+    }
+
+    .main-container {
+        width: 95%;
+        max-width: 800px;
+    }
+
+    .controls {
+        width: 95%;
+        max-width: 750px;
+    }
+
+    .avatar-container {
+        width: 380px;
+        height: 340px;
+        margin: 20px auto;
+    }
+
+    #ai-avatar {
+        width: 85%;
+        height: 85%;
+    }
+
+    .question-output {
+        width: 95%;
+        max-width: 750px;
+        font-size: 16px;
+    }
+
+    .button-group {
+        width: 95%;
+        max-width: 750px;
+        gap: 8px;
+    }
+
+    button {
+        font-size: 15px;
+        padding: 9px 15px;
+        margin: 8px;
+    }
+
+    .timer {
+        width: 70px;
+        height: 70px;
+        min-width: 70px;
+        font-size: 25px;
+    }
+
+    .start {
+        font-size: 25px;
+        min-width: 90px;
+    }
+
+    footer {
+        font-size: 13px;
+    }
+}
 
 @media (max-width: 600px) {
 
@@ -291,10 +397,17 @@ button:active {
         padding: 5px;
         font-size: 10px;
         height: 45px;
+        word-spacing: 2px;
     }
 
     .main-container {
         width: 100%;
+    }
+    .page-button{
+        height:35px;
+        max-width: 30%;
+        margin:5px;
+        padding:5px
     }
 
     .controls {

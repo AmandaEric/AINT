@@ -43,7 +43,9 @@ const el = {
     // Admin add buttons
     objectiveAdd: document.getElementById("objectiveAdd"),
     semiAdd: document.getElementById("semiAdd"),
-    qualitativeAdd: document.getElementById("qualitativeAdd")
+    qualitativeAdd: document.getElementById("qualitativeAdd"),
+
+    studentName: document.querySelector(".student-name"),
 };
 
 // ==========================================
@@ -96,6 +98,46 @@ const state = {
 // Current question category
 let currentCategory = null;
 
+
+// ==========================================
+// EXAM LOG (everything sent to the AI for grading)
+// ==========================================
+
+// log     = one entry per question asked
+//           { category, question, exchanges: [{ question, answer }] }
+// current = the entry for the question on screen right now
+const exam = {
+    log: [],
+    current: null,
+    submitted: false
+};
+
+
+// Save one answer under the current question.
+// "question" is whatever is on screen, which is the follow-up
+// question if the AI asked one.
+function recordAnswer(question, answer) {
+
+    if (!exam.current || !answer) {
+        return;
+    }
+
+    const last =
+        exam.current.exchanges[
+            exam.current.exchanges.length - 1
+        ];
+
+    // Don't save the same answer twice
+    if (last && last.question === question && last.answer === answer) {
+        return;
+    }
+
+    exam.current.exchanges.push({
+        question: question,
+        answer: answer
+    });
+}
+
 // ==========================================
 // TIMER
 // ==========================================
@@ -126,6 +168,16 @@ function startTimer() {
     }
 
     setQuestionButtonsEnabled(true);
+
+    // Allow the student to type an answer
+    if (el.responseBox) {
+        el.responseBox.disabled = false;
+    }
+
+    // Allow speech recognition
+    if (el.listenButton) {
+        el.listenButton.disabled = false;
+    }
 
     state.timerInterval = setInterval(() => {
 
@@ -182,19 +234,198 @@ function setQuestionButtonsEnabled(enabled) {
 }
 
 
+// Start / Stop button
 on(
     el.startButton,
     "click",
-    () => {
+    async () => {
 
-        if (state.testRunning) {
-            stopTimer();
-        } else {
+        // ---------- START ----------
+        if (!state.testRunning) {
+
+            if (
+                el.studentName &&
+                !el.studentName.value.trim()
+            ) {
+                alert("Please enter your name first.");
+                return;
+            }
+
+            // Fresh attempt
+            exam.log = [];
+            exam.current = null;
+            exam.submitted = false;
+
+            state.seconds = 0;
+            state.selectedQuestions = [];
+
+            updateTimerDisplay();
+
             startTimer();
+
+            return;
         }
+
+
+        // ---------- STOP = FINISH AND SUBMIT ----------
+        if (
+            !confirm(
+                "Finish the exam and submit it for grading?"
+            )
+        ) {
+            return;
+        }
+
+        // Save an answer that was typed or spoken
+        // but never sent with the Evaluate button
+        if (el.responseBox && el.questionText) {
+
+            recordAnswer(
+                el.questionText.textContent,
+                el.responseBox.value.trim()
+            );
+
+        }
+
+        stopTimer();
+
+        // Stop the avatar mid-sentence
+        if ("speechSynthesis" in window) {
+            speechSynthesis.cancel();
+        }
+
+        await submitExam();
 
     }
 );
+
+
+// ==========================================
+// SUBMIT EXAM FOR GRADING
+// ==========================================
+
+async function submitExam() {
+
+    if (exam.submitted) {
+        return;
+    }
+
+    if (exam.log.length === 0) {
+
+        if (el.evaluationBox) {
+
+            el.evaluationBox.innerHTML =
+                "<p>No questions were answered, so nothing was submitted.</p>";
+
+        }
+
+        return;
+    }
+
+    if (el.evaluationBox) {
+
+        el.evaluationBox.innerHTML =
+            "<p>Submitting your exam for grading...</p>";
+
+    }
+
+    try {
+
+        const response = await fetch(
+            `${BACKEND_URL}/api/grade-exam`,
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    studentName:
+                        el.studentName
+                            ? el.studentName.value.trim()
+                            : "",
+
+                    durationSeconds:
+                        state.seconds,
+
+                    log:
+                        exam.log
+
+                })
+
+            }
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Server responded with ${response.status}`
+            );
+
+        }
+
+        exam.submitted = true;
+
+        if (el.questionText) {
+
+            el.questionText.textContent =
+                "The exam is finished.";
+
+        }
+
+        if (el.evaluationBox) {
+
+            el.evaluationBox.innerHTML = `
+
+                <h4>Exam submitted</h4>
+
+                <p>
+                    Thank you. Your professor will share your results.
+                </p>
+
+            `;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "SUBMIT ERROR:",
+            error
+        );
+
+        if (el.evaluationBox) {
+
+            el.evaluationBox.innerHTML = `
+
+                <h4>Submission problem</h4>
+
+                <p>
+                    Your exam was not submitted. Keep this page open.
+                </p>
+
+                <button
+                    type="button"
+                    onclick="submitExam()">
+
+                    Try again
+
+                </button>
+
+            `;
+
+        }
+
+    }
+}
+
+// Make submitExam available
+// to the generated "Try again" button
+window.submitExam =
+    submitExam;
 
 
 // ==========================================
@@ -505,6 +736,24 @@ function askNextQuestion() {
     }
 
 
+    // Save an answer that was typed or spoken
+    // for the previous question but never evaluated
+    if (exam.current && el.responseBox) {
+
+        recordAnswer(
+            el.questionText.textContent,
+            el.responseBox.value.trim()
+        );
+
+    }
+
+
+    // Clear the response box for the new question
+    if (el.responseBox) {
+        el.responseBox.value = "";
+    }
+
+
     // Pick random question
     const randomIndex =
         Math.floor(
@@ -520,6 +769,16 @@ function askNextQuestion() {
         )[0];
 
 
+    // Start a new entry in the exam log
+    exam.current = {
+        category: currentCategory,
+        question: question,
+        exchanges: []
+    };
+
+    exam.log.push(exam.current);
+
+
     // Display question
     el.questionText.textContent =
         question;
@@ -530,7 +789,7 @@ function askNextQuestion() {
 
 
     // Animate mouth
-    animateMouth(question);
+    // animateMouth(question);
 
 
     // Enable response controls
@@ -1005,27 +1264,21 @@ if (SpeechRecognition) {
         };
 
 
-    state.recognition.onerror =
-        () => {
+    state.recognition.onerror = (event) => {
 
-            state.isListening =
-                false;
+        console.error("Speech recognition error:", event.error);
 
-            if (el.listenButton) {
+        state.isListening = false;
 
-                el.listenButton.textContent =
-                    "Start Listening";
+        if (el.listenButton) {
+            el.listenButton.textContent = "Start Listening";
+        }
 
-            }
-
-            if (el.evaluationBox) {
-
-                el.evaluationBox.innerHTML =
-                    "<p>There was a problem listening. Please try again or type your answer.</p>";
-
-            }
-
-        };
+        if (el.evaluationBox) {
+            el.evaluationBox.innerHTML =
+                `<p>Speech recognition error: ${event.error}</p>`;
+        }
+    };
 
 
     state.recognition.onresult =
@@ -1126,6 +1379,13 @@ async function handleEvaluate() {
     // the AI changes it
     const originalQuestion =
         el.questionText.textContent;
+
+
+    // Record this answer for grading at the end of the exam
+    recordAnswer(
+        originalQuestion,
+        answer
+    );
 
 
     // Show loading
@@ -1229,9 +1489,9 @@ async function handleEvaluate() {
 
 
             // Animate mouth
-            animateMouth(
-                data.followUpQuestion
-            );
+            // animateMouth(
+            //     data.followUpQuestion
+            // );
 
         }
 
@@ -1303,6 +1563,143 @@ on(
 
 
 // ==========================================
+// ADMIN: EXAM RESULTS
+// ==========================================
+
+// Stops question/answer text from being read as HTML
+function escapeHtml(text) {
+
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+}
+
+
+async function loadResultsPage() {
+
+    const list =
+        document.getElementById("resultsList");
+
+    if (!list) {
+        return;
+    }
+
+    const key =
+        sessionStorage.getItem("adminKey") ||
+        prompt("Admin key:");
+
+    if (!key) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${BACKEND_URL}/api/results`,
+            {
+                headers: {
+                    "x-admin-key": key
+                }
+            }
+        );
+
+        if (response.status === 401) {
+
+            sessionStorage.removeItem("adminKey");
+
+            list.innerHTML =
+                "<p>Wrong admin key.</p>";
+
+            return;
+        }
+
+        sessionStorage.setItem("adminKey", key);
+
+        // Newest first
+        const results =
+            (await response.json()).reverse();
+
+        if (results.length === 0) {
+
+            list.innerHTML =
+                "<p>No exams submitted yet.</p>";
+
+            return;
+        }
+
+        list.innerHTML = results.map(function (r) {
+
+            const score = r.gradingFailed
+                ? "Grading failed (answers saved)"
+                : r.percent + "%";
+
+            const details = r.questions.map(function (q, i) {
+
+                const answers =
+                    (q.exchanges || []).map(function (e) {
+
+                        return "<p><em>" +
+                            escapeHtml(e.question) +
+                            "</em><br>" +
+                            escapeHtml(e.answer) +
+                            "</p>";
+
+                    }).join("") ||
+                    "<p><em>No answer given</em></p>";
+
+                return "<div><strong>" +
+                    (i + 1) + ". " +
+                    escapeHtml(q.question) +
+                    "</strong>" +
+                    (q.score !== undefined
+                        ? " &mdash; " + q.score + "/10"
+                        : "") +
+                    answers +
+                    (q.feedback
+                        ? "<p>" + escapeHtml(q.feedback) + "</p>"
+                        : "") +
+                    "</div>";
+
+            }).join("");
+
+            return "<details class='saved-question'>" +
+                "<summary><strong>" +
+                escapeHtml(r.studentName) +
+                "</strong> &mdash; " + score +
+                " &mdash; " +
+                new Date(r.submittedAt).toLocaleString() +
+                "</summary>" +
+                (r.summary
+                    ? "<p>" + escapeHtml(r.summary) + "</p>"
+                    : "") +
+                details +
+                "</details>";
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error(error);
+
+        list.innerHTML =
+            "<p>Could not load results. Is the backend running?</p>";
+
+    }
+}
+
+
+// Only does something on the admin page
+on(
+    document.getElementById("loadResults"),
+    "click",
+    loadResultsPage
+);
+
+
+// ==========================================
 // INITIAL SETUP
 // ==========================================
 
@@ -1318,4 +1715,3 @@ console.log(
     "Saved questions:",
     state.questions
 );
-
