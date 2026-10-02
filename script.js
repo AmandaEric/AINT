@@ -46,6 +46,28 @@ const el = {
     qualitativeAdd: document.getElementById("qualitativeAdd"),
 
     studentName: document.querySelector(".student-name"),
+
+    // Admin: login screen and page
+    adminLogin: document.getElementById("adminLogin"),
+    adminPanel: document.getElementById("adminPanel"),
+    loginStepEmail: document.getElementById("loginStepEmail"),
+    loginStepCode: document.getElementById("loginStepCode"),
+    loginEmail: document.getElementById("loginEmail"),
+    loginCode: document.getElementById("loginCode"),
+    loginSentTo: document.getElementById("loginSentTo"),
+    loginMessage: document.getElementById("loginMessage"),
+    sendCodeButton: document.getElementById("sendCodeButton"),
+    verifyCodeButton: document.getElementById("verifyCodeButton"),
+    backToEmailButton: document.getElementById("backToEmailButton"),
+    logoutButton: document.getElementById("logoutButton"),
+    adminEmailLabel: document.getElementById("adminEmailLabel"),
+
+    // Admin: create a test, my tests, results
+    testName: document.getElementById("testName"),
+    createTest: document.getElementById("createTest"),
+    createdTest: document.getElementById("createdTest"),
+    myTests: document.getElementById("myTests"),
+    resultsList: document.getElementById("resultsList"),
 };
 
 // ==========================================
@@ -106,10 +128,18 @@ let currentCategory = null;
 // log     = one entry per question asked
 //           { category, question, exchanges: [{ question, answer }] }
 // current = the entry for the question on screen right now
+// testCode      = the code the student entered
+// testQuestions = that test's questions, sent by the server
 const exam = {
     log: [],
     current: null,
-    submitted: false
+    submitted: false,
+    testCode: null,
+    testQuestions: {
+        objective: [],
+        semi: [],
+        qualitative: []
+    }
 };
 
 
@@ -251,6 +281,59 @@ on(
                 return;
             }
 
+            // Ask for the test code
+            const code = (
+                prompt("Enter your test code:") || ""
+            ).trim().toUpperCase();
+
+            if (!code) {
+                return;
+            }
+
+            // Check the code and get that test's questions
+            el.startButton.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    `${BACKEND_URL}/api/tests/${encodeURIComponent(code)}/start`,
+                    { method: "POST" }
+                );
+
+                if (response.status === 404) {
+
+                    alert("That test code was not found. Check it and try again.");
+
+                    return;
+                }
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Server responded with ${response.status}`
+                    );
+
+                }
+
+                const data = await response.json();
+
+                exam.testCode = code;
+                exam.testQuestions = data.questions;
+
+            } catch (error) {
+
+                console.error("START ERROR:", error);
+
+                alert("Could not reach the server. Make sure the backend is running.");
+
+                return;
+
+            } finally {
+
+                el.startButton.disabled = false;
+
+            }
+
             // Fresh attempt
             exam.log = [];
             exam.current = null;
@@ -332,7 +415,7 @@ async function submitExam() {
     try {
 
         const response = await fetch(
-            `${BACKEND_URL}/api/grade-exam`,
+            `${BACKEND_URL}/api/tests/${encodeURIComponent(exam.testCode)}/submit`,
             {
 
                 method: "POST",
@@ -674,10 +757,11 @@ displayQuestions();
 
 
 // Add an entire category
+// (uses the questions loaded from the server for this test code)
 function addCategory(category) {
 
     const questions =
-        state.questions[category];
+        exam.testQuestions[category];
 
 
     if (
@@ -1563,7 +1647,7 @@ on(
 
 
 // ==========================================
-// ADMIN: EXAM RESULTS
+// ADMIN: LOGIN (email + one-time code)
 // ==========================================
 
 // Stops question/answer text from being read as HTML
@@ -1578,59 +1662,660 @@ function escapeHtml(text) {
 }
 
 
-async function loadResultsPage() {
+// The login token lives in sessionStorage, so it is
+// forgotten when the tab is closed
+const admin = {
+    token: sessionStorage.getItem("adminToken"),
+    email: sessionStorage.getItem("adminEmail"),
+    pendingEmail: null
+};
 
-    const list =
-        document.getElementById("resultsList");
 
-    if (!list) {
+function setLoginMessage(text) {
+
+    if (el.loginMessage) {
+        el.loginMessage.textContent = text;
+    }
+
+}
+
+
+// Show the admin page OR the login screen
+function showAdminPanel(loggedIn) {
+
+    if (el.adminLogin) {
+        el.adminLogin.hidden = loggedIn;
+    }
+
+    if (el.adminPanel) {
+        el.adminPanel.hidden = !loggedIn;
+    }
+
+    if (loggedIn && el.adminEmailLabel) {
+        el.adminEmailLabel.textContent = admin.email;
+    }
+
+}
+
+
+// Show the "enter your email" step or the "enter the code" step
+function showLoginStep(step) {
+
+    if (el.loginStepEmail) {
+        el.loginStepEmail.hidden = step !== "email";
+    }
+
+    if (el.loginStepCode) {
+        el.loginStepCode.hidden = step !== "code";
+    }
+
+}
+
+
+// fetch() for admin-only routes: adds the login token
+async function adminFetch(path, options) {
+
+    options = options || {};
+
+    const response = await fetch(
+        `${BACKEND_URL}${path}`,
+        {
+
+            method: options.method || "GET",
+
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + admin.token
+            },
+
+            body: options.body
+
+        }
+    );
+
+    // Logged out or session expired
+    if (response.status === 401) {
+
+        logoutAdmin(false);
+
+        setLoginMessage("Your session expired. Please log in again.");
+
+        throw new Error("Your session expired. Please log in again.");
+    }
+
+    return response;
+}
+
+
+// Step 1: ask the server to email a code
+async function requestLoginCode() {
+
+    const email =
+        el.loginEmail
+            ? el.loginEmail.value.trim().toLowerCase()
+            : "";
+
+    if (email === "") {
+
+        setLoginMessage("Enter your email address.");
+
         return;
     }
 
-    const key =
-        sessionStorage.getItem("adminKey") ||
-        prompt("Admin key:");
+    if (el.sendCodeButton) {
+        el.sendCodeButton.disabled = true;
+    }
 
-    if (!key) {
+    setLoginMessage("Sending code...");
+
+    try {
+
+        const response = await fetch(
+            `${BACKEND_URL}/api/admin/request-code`,
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({ email: email })
+
+            }
+        );
+
+        const data =
+            await response.json().catch(function () { return {}; });
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || `Server responded with ${response.status}`
+            );
+
+        }
+
+        admin.pendingEmail = email;
+
+        if (el.loginSentTo) {
+            el.loginSentTo.textContent = email;
+        }
+
+        if (el.loginCode) {
+            el.loginCode.value = "";
+        }
+
+        showLoginStep("code");
+
+        setLoginMessage("");
+
+        if (el.loginCode) {
+            el.loginCode.focus();
+        }
+
+    } catch (error) {
+
+        console.error("REQUEST CODE ERROR:", error);
+
+        setLoginMessage(
+            error instanceof TypeError
+                ? "Could not reach the server. Make sure the backend is running."
+                : error.message
+        );
+
+    }
+
+    if (el.sendCodeButton) {
+        el.sendCodeButton.disabled = false;
+    }
+}
+
+
+// Step 2: check the code
+async function verifyLoginCode() {
+
+    const code =
+        el.loginCode
+            ? el.loginCode.value.trim()
+            : "";
+
+    if (code === "") {
+
+        setLoginMessage("Enter the 6-digit code from your email.");
+
         return;
+    }
+
+    if (el.verifyCodeButton) {
+        el.verifyCodeButton.disabled = true;
     }
 
     try {
 
         const response = await fetch(
-            `${BACKEND_URL}/api/results`,
+            `${BACKEND_URL}/api/admin/verify`,
             {
+
+                method: "POST",
+
                 headers: {
-                    "x-admin-key": key
-                }
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    email: admin.pendingEmail,
+                    code: code
+                })
+
             }
         );
 
-        if (response.status === 401) {
+        const data =
+            await response.json().catch(function () { return {}; });
 
-            sessionStorage.removeItem("adminKey");
+        if (!response.ok) {
 
-            list.innerHTML =
-                "<p>Wrong admin key.</p>";
+            throw new Error(
+                data.error || `Server responded with ${response.status}`
+            );
+
+        }
+
+        admin.token = data.token;
+        admin.email = data.email;
+
+        sessionStorage.setItem("adminToken", admin.token);
+        sessionStorage.setItem("adminEmail", admin.email);
+
+        setLoginMessage("");
+
+        showAdminPanel(true);
+
+        loadMyTests();
+
+    } catch (error) {
+
+        console.error("VERIFY ERROR:", error);
+
+        setLoginMessage(
+            error instanceof TypeError
+                ? "Could not reach the server. Make sure the backend is running."
+                : error.message
+        );
+
+    }
+
+    if (el.verifyCodeButton) {
+        el.verifyCodeButton.disabled = false;
+    }
+}
+
+
+function logoutAdmin(tellServer) {
+
+    // Invalidate the token on the server too
+    if (tellServer && admin.token) {
+
+        fetch(
+            `${BACKEND_URL}/api/admin/logout`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + admin.token
+                }
+            }
+        ).catch(function () {});
+
+    }
+
+    admin.token = null;
+    admin.email = null;
+    admin.pendingEmail = null;
+
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminEmail");
+
+    // Clear anything private from the screen
+    if (el.myTests) {
+        el.myTests.innerHTML = "";
+    }
+
+    if (el.resultsList) {
+        el.resultsList.innerHTML = "";
+    }
+
+    if (el.createdTest) {
+        el.createdTest.innerHTML = "";
+    }
+
+    if (el.loginEmail) {
+        el.loginEmail.value = "";
+    }
+
+    showLoginStep("email");
+
+    showAdminPanel(false);
+}
+
+
+on(el.sendCodeButton, "click", requestLoginCode);
+
+on(el.verifyCodeButton, "click", verifyLoginCode);
+
+on(
+    el.backToEmailButton,
+    "click",
+    function () {
+
+        setLoginMessage("");
+
+        showLoginStep("email");
+
+    }
+);
+
+on(
+    el.logoutButton,
+    "click",
+    function () {
+        logoutAdmin(true);
+    }
+);
+
+// Enter key submits each step
+on(
+    el.loginEmail,
+    "keydown",
+    function (event) {
+
+        if (event.key === "Enter") {
+            requestLoginCode();
+        }
+
+    }
+);
+
+on(
+    el.loginCode,
+    "keydown",
+    function (event) {
+
+        if (event.key === "Enter") {
+            verifyLoginCode();
+        }
+
+    }
+);
+
+
+// ==========================================
+// ADMIN: CREATE A TEST
+// ==========================================
+
+// Sends the questions the admin entered to the server.
+// The server saves them under the logged-in email
+// and answers with the test code.
+async function createTest() {
+
+    if (!el.createdTest) {
+        return;
+    }
+
+    const total =
+        state.questions.objective.length +
+        state.questions.semi.length +
+        state.questions.qualitative.length;
+
+    if (total === 0) {
+
+        alert("Add at least one question first.");
+
+        return;
+    }
+
+    const name =
+        el.testName
+            ? el.testName.value.trim()
+            : "";
+
+    if (el.createTest) {
+        el.createTest.disabled = true;
+    }
+
+    try {
+
+        const response = await adminFetch(
+            "/api/tests",
+            {
+
+                method: "POST",
+
+                body: JSON.stringify({
+                    name: name,
+                    questions: state.questions
+                })
+
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || `Server responded with ${response.status}`
+            );
+
+        }
+
+        el.createdTest.innerHTML = `
+
+            <h4>Test created</h4>
+
+            <p>
+                Give this code to your students:
+                <strong style="font-size: 1.6em; letter-spacing: 3px;">
+                    ${escapeHtml(data.code)}
+                </strong>
+            </p>
+
+            <p>
+                Results are emailed to ${escapeHtml(admin.email)}
+                and saved under "My Tests" below.
+            </p>
+
+        `;
+
+        // The questions now live on the server, so clear the
+        // draft to keep it from mixing into the next test
+        state.questions = {
+            objective: [],
+            semi: [],
+            qualitative: []
+        };
+
+        saveQuestions();
+
+        displayQuestions();
+
+        if (el.testName) {
+            el.testName.value = "";
+        }
+
+        loadMyTests();
+
+    } catch (error) {
+
+        console.error(
+            "CREATE TEST ERROR:",
+            error
+        );
+
+        el.createdTest.innerHTML =
+            `<p>Could not create the test: ${escapeHtml(error.message)}</p>`;
+
+    }
+
+    if (el.createTest) {
+        el.createTest.disabled = false;
+    }
+}
+
+
+on(
+    el.createTest,
+    "click",
+    createTest
+);
+
+
+// ==========================================
+// ADMIN: MY TESTS (pick one to view)
+// ==========================================
+
+async function loadMyTests() {
+
+    if (!el.myTests) {
+        return;
+    }
+
+    el.myTests.innerHTML =
+        "<p>Loading your tests...</p>";
+
+    try {
+
+        const response =
+            await adminFetch("/api/admin/tests");
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Server responded with ${response.status}`
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+        if (data.tests.length === 0) {
+
+            el.myTests.innerHTML =
+                "<p>You haven't created any tests yet.</p>";
 
             return;
         }
 
-        sessionStorage.setItem("adminKey", key);
+        el.myTests.innerHTML = data.tests.map(function (t) {
 
-        // Newest first
-        const results =
-            (await response.json()).reverse();
+            return `
 
-        if (results.length === 0) {
+                <div class="saved-question">
 
-            list.innerHTML =
-                "<p>No exams submitted yet.</p>";
+                    <p>
+                        <strong>${escapeHtml(t.name || "Untitled test")}</strong>
+                        &mdash; code
+                        <strong>${escapeHtml(t.code)}</strong>
+                    </p>
+
+                    <p>
+                        ${t.questionCount} questions
+                        &mdash; ${t.submitted} submitted
+                        ${t.average !== null
+                            ? "&mdash; average " + t.average + "%"
+                            : ""}
+                        &mdash; created
+                        ${escapeHtml(new Date(t.createdAt).toLocaleDateString())}
+                    </p>
+
+                    <button
+                        type="button"
+                        data-code="${escapeHtml(t.code)}">
+
+                        View results
+
+                    </button>
+
+                </div>
+
+            `;
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error(
+            "LOAD TESTS ERROR:",
+            error
+        );
+
+        // adminFetch already handled an expired session
+        if (admin.token) {
+
+            el.myTests.innerHTML =
+                "<p>Could not load your tests. Is the backend running?</p>";
+
+        }
+
+    }
+}
+
+
+// One listener for every "View results" button
+on(
+    el.myTests,
+    "click",
+    function (event) {
+
+        const button =
+            event.target.closest("button[data-code]");
+
+        if (button) {
+            loadResults(button.dataset.code);
+        }
+
+    }
+);
+
+
+// ==========================================
+// ADMIN: RESULTS FOR ONE TEST
+// ==========================================
+
+async function loadResults(code) {
+
+    if (!el.resultsList) {
+        return;
+    }
+
+    el.resultsList.innerHTML =
+        "<p>Loading results...</p>";
+
+    try {
+
+        const response = await adminFetch(
+            `/api/tests/${encodeURIComponent(code)}/results`
+        );
+
+        if (response.status === 404) {
+
+            el.resultsList.innerHTML =
+                "<p>Test not found.</p>";
 
             return;
         }
 
-        list.innerHTML = results.map(function (r) {
+        if (!response.ok) {
+
+            throw new Error(
+                `Server responded with ${response.status}`
+            );
+
+        }
+
+        const data =
+            await response.json();
+
+        const subs =
+            data.submissions;
+
+        const title =
+            `<h3>${escapeHtml(data.name || "Untitled test")} ` +
+            `(${escapeHtml(data.code)})</h3>`;
+
+        if (subs.length === 0) {
+
+            el.resultsList.innerHTML =
+                title +
+                "<p>No students have submitted yet.</p>";
+
+            return;
+        }
+
+        // Class average (only graded exams)
+        const graded =
+            subs.filter(function (s) {
+                return s.percent !== null;
+            });
+
+        const average = graded.length
+            ? Math.round(
+                graded.reduce(function (sum, s) {
+                    return sum + s.percent;
+                }, 0) / graded.length
+            )
+            : null;
+
+        const header =
+            title +
+            `<p>${subs.length} submitted` +
+            (average !== null
+                ? ` &mdash; class average ${average}%`
+                : "") +
+            "</p>";
+
+        el.resultsList.innerHTML = header + subs.map(function (r) {
 
             const score = r.gradingFailed
                 ? "Grading failed (answers saved)"
@@ -1670,7 +2355,8 @@ async function loadResultsPage() {
                 escapeHtml(r.studentName) +
                 "</strong> &mdash; " + score +
                 " &mdash; " +
-                new Date(r.submittedAt).toLocaleString() +
+                escapeHtml(new Date(r.submittedAt).toLocaleString()) +
+                (r.emailSent ? "" : " &mdash; email not sent") +
                 "</summary>" +
                 (r.summary
                     ? "<p>" + escapeHtml(r.summary) + "</p>"
@@ -1684,19 +2370,61 @@ async function loadResultsPage() {
 
         console.error(error);
 
-        list.innerHTML =
-            "<p>Could not load results. Is the backend running?</p>";
+        if (admin.token) {
+
+            el.resultsList.innerHTML =
+                "<p>Could not load results. Is the backend running?</p>";
+
+        }
 
     }
 }
 
 
-// Only does something on the admin page
-on(
-    document.getElementById("loadResults"),
-    "click",
-    loadResultsPage
-);
+// ==========================================
+// ADMIN PAGE START-UP
+// ==========================================
+
+// Runs on page load. Shows the login screen unless the saved
+// token is still valid. (Only does something on the admin page.)
+async function initAdminPage() {
+
+    if (!el.adminLogin) {
+        return;
+    }
+
+    showLoginStep("email");
+
+    if (!admin.token) {
+
+        showAdminPanel(false);
+
+        return;
+    }
+
+    // Check the saved token with the server before trusting it
+    try {
+
+        const response =
+            await adminFetch("/api/admin/tests");
+
+        if (!response.ok) {
+            throw new Error("Not logged in");
+        }
+
+        admin.email =
+            (await response.json()).email || admin.email;
+
+        showAdminPanel(true);
+
+        loadMyTests();
+
+    } catch (error) {
+
+        showAdminPanel(false);
+
+    }
+}
 
 
 // ==========================================
@@ -1706,6 +2434,8 @@ on(
 updateTimerDisplay();
 
 setQuestionButtonsEnabled(false);
+
+initAdminPage();
 
 console.log(
     "AINT script loaded successfully."

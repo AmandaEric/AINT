@@ -31,6 +31,40 @@
         </a>
 
     </header>
+        <!-- LOGIN SCREEN (shown first) -->
+    <div id="adminLogin">
+        <h2>Admin Login</h2>
+
+        <div id="loginStepEmail">
+            <input id="loginEmail" type="email" placeholder="Your email">
+            <button id="sendCodeButton" type="button">Send login code</button>
+        </div>
+
+        <div id="loginStepCode" hidden>
+            <p>Enter the 6-digit code sent to <strong id="loginSentTo"></strong></p>
+            <input id="loginCode" type="text" inputmode="numeric" maxlength="6" placeholder="123456">
+            <button id="verifyCodeButton" type="button">Log in</button>
+            <button id="backToEmailButton" type="button">Use a different email</button>
+        </div>
+
+        <p id="loginMessage"></p>
+    </div>
+
+    <!-- ADMIN PAGE (hidden until logged in) -->
+    <div id="adminPanel" hidden>
+        <p>Logged in as <strong id="adminEmailLabel"></strong>
+        <button id="logoutButton" type="button">Log out</button></p>
+
+        <h2>Create a Test</h2>
+        <input id="testName" type="text" placeholder="Test name (optional)">
+        <!-- your existing question inputs, Add buttons, and saved-question lists go here -->
+        <button id="createTest" type="button">Create Test</button>
+        <div id="createdTest"></div>
+
+        <h2>My Tests</h2>
+        <div id="myTests"></div>
+        <div id="resultsList"></div>
+    </div>
 
 
     <h1>Add Questions</h1>
